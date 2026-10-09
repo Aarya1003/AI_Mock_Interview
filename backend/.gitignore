@@ -1,0 +1,17 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Spring Boot secrets
+**/application.properties
+!**/application.properties.example
+
+# Dependencies and build output
+node_modules/
+dist/
+target/
+
+# IDE files
+.vscode/
+.idea/

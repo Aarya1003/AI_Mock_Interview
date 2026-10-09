@@ -1,0 +1,26 @@
+# Secrets and environment files
+.env
+.env.*
+!.env.example
+
+# Spring Boot configuration containing credentials
+**/application.properties
+**/application-prod.properties
+!**/application.properties.example
+
+# Logs
+*.log
+backend.log
+
+# Dependencies and build output
+node_modules/
+dist/
+target/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db

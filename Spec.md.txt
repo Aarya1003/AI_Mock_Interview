@@ -1,0 +1,87 @@
+# PROJECT: AI Mock Interview Platform (working full-stack web app)
+
+## Goal
+Build a REAL, working, interactive web app where a user practises a spoken
+mock interview with an AI interviewer and gets a scored report at the end.
+This is NOT a landing page or a UI clone. Every feature below must work end
+to end. If something can't be done, tell me plainly instead of faking it
+with placeholder data.
+
+## Stack
+- Frontend: React + Vite + Tailwind
+- Backend: Spring Boot 3 (Java 21), REST APIs, JWT auth
+- DB: MySQL with Flyway migrations
+- LLM: behind one `LlmClient` interface; provider picked by env var
+  LLM_PROVIDER (gemini | nvidia) so models can be swapped without code changes
+- Voice in: browser Web Speech API (lang en-IN) for live transcript;
+  Web Audio API (AnalyserNode) for pitch, volume and pause metrics
+- Voice out: browser speechSynthesis (the AI interviewer speaks each question)
+- Camera: getUserMedia, processed in the browser only
+- Billing: Razorpay TEST mode, built LAST
+
+## Features
+1. AUTH: signup, login, logout, BCrypt password hashing, JWT, protected
+   routes, basic profile.
+2. SETUP SCREEN: field -> role -> level (fresher / 1-3 yrs / 3+ yrs) ->
+   type (technical / HR-behavioural / mixed) -> duration (15 / 30 / 45 min,
+   default 30) -> camera on/off -> mic and camera test.
+3. ROLE CATALOGUE (seeded in DB, easy to extend), each role with a topic list
+   the AI draws questions from:
+   - IT: Java Backend, Full Stack, Frontend, Python, Data Analyst/Engineer,
+     ML/AI, DevOps/Cloud, QA/Testing, Mobile, Cybersecurity, Product/Project
+     Management, Technical Support
+   - MBA/Business: Finance, Marketing, HR, Operations, Consulting, Business
+     Analyst, Sales
+   - General: Fresher HR round, Bank/Govt, Custom role typed by the user
+4. INTERVIEW ENGINE (server-side state machine): intro -> warm-up -> core
+   questions -> adaptive follow-ups based on what the user actually said ->
+   "any questions for me?" -> wrap-up.
+   - Default 30 min, selectable 15/30/45, HARD STOP at 45 min. The AI paces
+     the number of questions to the time left.
+   - Ending before 15 min is allowed, but the report is marked "partial".
+   - Difficulty adapts up or down with answer quality. Never repeat a question.
+5. VOICE LOOP: AI speaks the question -> mic auto-listens -> live transcript
+   on screen -> ~3 s silence ends the turn (also a "Done answering" button)
+   -> transcript + voice metrics go to the backend -> next question.
+   Text-input fallback if the browser lacks speech support.
+6. INTERRUPTIONS, logged per interview:
+   (a) user talks over the AI (AI stops speaking politely),
+   (b) AI politely interjects when an answer rambles past ~90 s or goes
+       off-topic,
+   (c) long silence (>8 s) triggers a gentle prompt.
+7. CAMERA (optional): self-view during the interview. If time allows, add
+   on-device indicators (face in frame, looking away, posture). Video is
+   NEVER uploaded or stored. The report shows a camera section only if the
+   camera was on.
+8. SCORING, 100 points total:
+   - Answer correctness and depth: 40 (LLM-graded per answer against a
+     rubric, with written reasoning)
+   - Structure and clarity: 15
+   - Confidence and tone: 20 (pitch variation, volume steadiness, response
+     latency, hesitations, false starts)
+   - Fluency: 15 (pace in WPM, filler words including Hinglish ones like
+     "matlab", "basically", long pauses)
+   - Composure under interruptions: 10
+   The report must say confidence is ESTIMATED from voice signals.
+9. REPORT: total score /100, per-dimension breakdown, per-question feedback
+   (what I said, what a strong answer includes, score), confidence/pace
+   timeline chart, top 3 strengths, top 3 improvements, filler-word counts,
+   comparison with previous attempts.
+10. DASHBOARD: history of interviews, score trend, retake button.
+11. PRIVACY: store transcripts, metrics and scores only. No raw audio saved.
+    User can delete all their data.
+12. BILLING (LAST PHASE): Free (1 interview/month, 15 min max) and Pro
+    (unlimited, up to 45 min, full report and history). Razorpay test-mode
+    checkout + webhook, plan gating enforced in the backend, prices in config.
+
+## Rules for the coding agent
+- Work in PHASES. After each phase: run it, fix errors, give me the exact
+  commands to start it and what to click to test it, then STOP and wait for
+  my go-ahead.
+- Phases: 0 plan + scaffold, 1 auth + DB, 2 roles + setup screen,
+  3 interview engine (text only first), 4 voice in/out, 5 voice metrics +
+  scoring + report, 6 camera, 7 dashboard, 8 billing.
+- Real code only: no TODO stubs, no fake data. Handle errors (mic denied,
+  network drop, LLM timeout with retry).
+- Secrets only in .env; provide .env.example. Write a README with setup steps.
+- Add tests for the scoring logic and the timer/state machine.
